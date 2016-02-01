@@ -1,0 +1,48 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+SHARED_PKG := libdatrie1
+SHLIB_VER := 0.2.0
+
+%:
+	dh $@ --with autoreconf
+
+override_dh_auto_build-indep:
+	$(MAKE) -C doc
+
+override_dh_auto_build-arch:
+	$(MAKE) -C datrie
+	$(MAKE) -C tools
+	$(MAKE) -C man
+
+# No test for doc
+override_dh_auto_test-indep:
+
+override_dh_auto_test-arch:
+	$(MAKE) -C tests check
+
+override_dh_auto_install-indep:
+	$(MAKE) -C doc install DESTDIR=$(CURDIR)/debian/tmp
+
+override_dh_install-indep:
+	dh_install -i -Xjquery.js
+
+override_dh_auto_install-arch:
+	$(MAKE) -C datrie install DESTDIR=$(CURDIR)/debian/tmp
+	$(MAKE) -C tools  install DESTDIR=$(CURDIR)/debian/tmp
+	$(MAKE) -C man    install DESTDIR=$(CURDIR)/debian/tmp
+	$(MAKE) install-am DESTDIR=$(CURDIR)/debian/tmp
+
+override_dh_installchangelogs-arch:
+	dh_installchangelogs -Nlibdatrie-dev -a
+
+override_dh_installdocs-arch:
+	dh_installdocs -plibdatrie-dev --link-doc=libdatrie1
+	dh_installdocs --remaining-packages -a
+
+override_dh_makeshlibs:
+	dh_makeshlibs -a -p$(SHARED_PKG) -V'$(SHARED_PKG) (>= $(SHLIB_VER))' \
+		--add-udeb="libdatrie1-udeb"
